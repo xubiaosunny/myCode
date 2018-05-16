@@ -31,7 +31,7 @@ class Solution:
             if -2 ** 31 <= i <= 2 ** 31 - 1:
                 return i
             return 0
-       
+
         if x > 0:
             return int32_check(int(str(x)[::-1]))
         elif x < 0:
