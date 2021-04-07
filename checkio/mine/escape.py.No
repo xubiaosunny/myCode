@@ -1,0 +1,98 @@
+"""
+There is an open jar and a fly inside it. That fly is flying from side to side frantically because it really wants to get away from there. Your task is to estimate whether it will succeed in its attempts (return True) or not (return False).
+
+!()[https://d17mnqrx9pmt3e.cloudfront.net/media/missions/media/7f6d48c6da2b4c6c8218654c6046cf77/example.png]
+
+So what do we got? The jar is represented by a rectangle in the drawing above. It has width W and height H. The jar has a hole of the size d. Our fly can escape through it. The hole is always placed on the top of the jar and the jar is symmetrical. Point O is the origin, the y-axis matches the jar's left side and the x-axis matches the jar's bottom side. The wall thickness is negligible.
+
+Initial position of the fly is defined by x0 and y0, which are assigned arbitrary. But it's guaranteed that the fly is inside the jar by the time we start to observe it. In the very beginning the fly is flying linearly, Vx and Vy are a horizontal and vertical components of the velocity vector respectively. When the fly hits a wall, it deflects from it and fly in the opposite direction (like a billiard ball). The drawing above illustrates how it works. Also, there's one tiny detail: after each collision the fly loses 5% of its initial stamina, getting tired (velocity remains the same though). So after 20 collisions the fly becomes completely exhausted. The fly's size is negligible.
+
+Input: Two lists of integers:
+
+the first contains jar's dims [W, H, d]
+the second contains fly's characteristics [x0, y0, vx, vy]
+Output: True or False.
+
+Example:
+
+escape([1000, 1000, 200], [0, 0, 100, 0]) == False
+escape([1000, 1000, 200], [450, 50, 0, -100]) == True
+
+Precondition:
+All dimensions are given in abstract units, velocities are given in units/sec.
+
+W ∈ [100; 1000]
+H ∈ [W; 4W]
+d ∈ [0.1W; 0.8W]
+x0 ∈ [0; W]
+y0 ∈ [0; H]
+vx ∈ (-2W; 2W)
+vy ∈ (-2H; 2H)
+V != 0
+"""
+
+def escape(jar, fly):
+    w, h, d = jar
+    x0, y0, vx, vy = fly
+    c = 0
+    d_start = (w - d) / 2
+    d_end = d_start + d
+
+    def impact(x, y, k, flag):
+        nonlocal w, h, c, d_start, d_end
+
+        print(x, y, k, flag)
+        c += 1
+        if c > 20:
+            return False
+
+        if k > 0 and flag:
+            a = (w - x) * k + y
+            if a <= h:
+                return impact(w, a, -k, not flag)
+            a = (h - y) * (1 / k) + x
+            if d_start < a < d_end:
+                return True
+            else:
+                return impact(w, a, -k, flag)
+        if k > 0 and not flag:
+            a = x * k + y
+            if a >= 0:
+                return impact(0, a, -k, not flag)
+            b = y * (1 / k) + x
+            return impact(b, 0, -k, flag)
+        if k < 0 and flag:
+            b = x - y * (1 / k)
+            if b <= w:
+                return impact(b, 0, -k,flag)
+            a = y + (w - x) * k
+            return impact(w, a, -k, flag)
+        if k < 0 and not flag:
+            b = x + (h - y) * (1 / k)
+            if b >= 0:
+                if d_start < b < d_end:
+                    return True 
+                return impact(b, h, -k,flag)
+            a = y - x * k
+            return impact(0, a, -k, flag)
+
+
+    _y = vy - y0
+    _x = vx - x0
+    if _x == 0:
+        return d_start < vx < d_end
+    if _y == 0:
+        return False
+    return impact(x0, y0, _y / _x, True if _x > 0 else False)
+
+
+if __name__ == '__main__':
+    print("Example:")
+    print(escape([1000, 1000, 200], [0, 0, 100, 0]))
+    
+    # These "asserts" are used for self-checking and not for an auto-testing
+    assert escape([1000, 1000, 200], [0, 0, 100, 0]) == False, "First"
+    assert escape([1000, 1000, 200], [450, 50, 0, -100]) == True, "Second"
+    assert escape([1000, 1000, 200], [450, 1000, 100, 0]) == False, "Third"
+    assert escape([1000, 1000, 200], [250, 250, -10, -50]) == False, "Fourth"
+    assert escape([1000, 2000, 200], [20, 35, 100, 175]) == True, "Fifth"
